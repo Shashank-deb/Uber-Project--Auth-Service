@@ -5,20 +5,22 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.Collections;
 
 public class AuthPassengerDetails extends Passenger implements UserDetails {
 
-    private String username;
-    private String password;
-
     public AuthPassengerDetails(Passenger passenger) {
-        this.username = passenger.getEmail();
-        this.password = passenger.getPassword();
+        this.setId(passenger.getId());
+        this.setEmail(passenger.getEmail());
+        this.setPassword(passenger.getPassword());
+        this.setPhoneNumber(passenger.getPhoneNumber());
+        this.setCreatedAt(passenger.getCreatedAt());
+        this.setUpdatedAt(passenger.getUpdatedAt());
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-      return null;
+        return Collections.emptyList();
     }
 
     @Override

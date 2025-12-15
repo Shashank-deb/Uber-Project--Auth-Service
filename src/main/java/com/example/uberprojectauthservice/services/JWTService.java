@@ -24,12 +24,15 @@ public class JWTService implements CommandLineRunner {
     @Value("${jwt.secret}")
     private String SECRET;
 
-    private SecretKey getSecretKey() {
+    /* ===================== KEY ===================== */
+
+    public SecretKey getSecretKey() {
         return Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
     }
 
+    /* ===================== TOKEN CREATION BY PAYLOAD ===================== */
 
-    private String createToken(Map<String, Object> payload, String email) {
+    public String createToken(Map<String, Object> payload, String email) {
 
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiry * 1000L);
@@ -43,8 +46,24 @@ public class JWTService implements CommandLineRunner {
                 .compact();
     }
 
+    /* ===================== TOKEN CREATION BY EMAIL ===================== */
 
-    private <T> T extractPayload(String token, Function<Claims, T> resolverFunction) {
+    public String createToken(String email) {
+
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + expiry * 1000L);
+
+        return Jwts.builder()
+                .setSubject(email)
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(getSecretKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    /* ===================== CLAIM EXTRACTION ===================== */
+
+    public <T> T extractPayload(String token, Function<Claims, T> resolverFunction) {
 
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(getSecretKey())
@@ -55,32 +74,32 @@ public class JWTService implements CommandLineRunner {
         return resolverFunction.apply(claims);
     }
 
-
-    private <T> T extractPayload(String token, String payloadKey, Class<T> type) {
+    public <T> T extractPayload(String token, String payloadKey, Class<T> type) {
         return extractPayload(token, claims -> claims.get(payloadKey, type));
     }
 
-    private Date extractExpiration(String token) {
+    public Date extractExpiration(String token) {
         return extractPayload(token, Claims::getExpiration);
     }
 
-    private Boolean isTokenExpired(String token) {
+    public Boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 
-    private String extractEmail(String token) {
+    public String extractEmail(String token) {
         return extractPayload(token, Claims::getSubject);
     }
 
-    private String extractPhoneNumber(String token) {
+    public String extractPhoneNumber(String token) {
         return extractPayload(token, "phoneNumber", String.class);
     }
 
-    private Boolean validateToken(String token, String email) {
+    public Boolean validateToken(String token, String email) {
         final String emailFromToken = extractEmail(token);
         return emailFromToken.equals(email) && !isTokenExpired(token);
     }
 
+    /* ===================== TEST RUNNER ===================== */
 
     @Override
     public void run(String... args) {
